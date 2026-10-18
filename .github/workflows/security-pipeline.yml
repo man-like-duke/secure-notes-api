@@ -38,8 +38,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Semgrep
-        run: pip install semgrep
+        run: pip install semgrep==1.181.0
 
       - name: Run Semgrep
-        run: semgrep scan --config p/python --error .
-        
+        run: semgrep scan --config .semgrep/rules.yml --error .
