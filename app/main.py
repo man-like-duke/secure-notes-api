@@ -41,3 +41,6 @@ def create_note(note: Note):
     notes.append(new_note)
 
     return new_note
+
+def unsafe_example(user_input):
+    return eval(user_input)
