@@ -41,3 +41,7 @@ def create_note(note: Note):
     notes.append(new_note)
 
     return new_note
+
+from mangum import Mangum
+
+handler = Mangum(app)
