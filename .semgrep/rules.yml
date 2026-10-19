@@ -1,0 +1,8 @@
+rules:
+  - id: no-eval
+    languages:
+      - python
+    message: "Use of eval() is prohibited because it can execute untrusted input."
+    severity: ERROR
+    patterns:
+      - pattern: eval(...)
