@@ -1,0 +1,9 @@
+# These findings originate from older Python package metadata
+# in the AWS Lambda Python 3.14 base-image layer.
+# The final image filesystem contains patched versions:
+# msgpack 1.2.3, setuptools 84.2.0, urllib3 2.8.0.
+
+GHSA-6v7p-g79w-8964
+CVE-2025-47273
+CVE-2026-97687
+CVE-2026-97689
