@@ -106,28 +106,36 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
     Statement = [
       {
         Effect = "Allow"
+
         Action = [
-          "ecr:*",
-          "lambda:*",
-          "apigateway:*",
-          "apigatewayv2:*",
-          "logs:*",
-          "iam:GetRole",
-          "iam:CreateRole",
-          "iam:DeleteRole",
-          "iam:GetRolePolicy",
-          "iam:PutRolePolicy",
-          "iam:DeleteRolePolicy",
-          "iam:AttachRolePolicy",
-          "iam:DetachRolePolicy",
-          "iam:ListRolePolicies",
-          "iam:ListAttachedRolePolicies",
-          "iam:PassRole",
-          "iam:TagRole",
-          "iam:UntagRole",
-          "xray:*"
+          "ecr:GetAuthorizationToken"
         ]
+
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ]
+
+        Resource = aws_ecr_repository.secure_notes.arn
+      },
+      {
+        Effect = "Allow"
+
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration"
+        ]
+
+        Resource = aws_lambda_function.secure_notes.arn
       }
     ]
   })
