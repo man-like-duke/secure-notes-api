@@ -59,7 +59,79 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.lambda_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
 
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+}
+
+resource "aws_iam_role" "github_actions" {
+  name = "secure-notes-github-actions-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        }
+
+        Action = "sts:AssumeRoleWithWebIdentity"
+
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:man-like-duke/secure-notes-api:ref:refs/heads/master"
+          }
+        }
+      }
+    ]
+  })
+}
+resource "aws_iam_role_policy" "github_actions_deploy" {
+  name = "secure-notes-github-actions-deploy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:*",
+          "lambda:*",
+          "apigateway:*",
+          "apigatewayv2:*",
+          "logs:*",
+          "iam:GetRole",
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:GetRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:ListRolePolicies",
+          "iam:ListAttachedRolePolicies",
+          "iam:PassRole",
+          "iam:TagRole",
+          "iam:UntagRole",
+          "xray:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
 # checkov:skip=CKV_AWS_272:Code signing is intentionally deferred for this portfolio demo; the Lambda is deployed from an immutable ECR image managed by Terraform.
 # checkov:skip=CKV_AWS_116:No DLQ is configured because this Lambda is invoked synchronously through API Gateway and has no asynchronous event source.
 # checkov:skip=CKV_AWS_117:Lambda is intentionally kept outside a VPC because it has no private network dependencies; avoiding a VPC also avoids unnecessary NAT and networking cost.
@@ -67,13 +139,12 @@ resource "aws_lambda_function" "secure_notes" {
   function_name = "secure-notes-api"
 
   package_type = "Image"
-  image_uri    = "${aws_ecr_repository.secure_notes.repository_url}:0.1.0"
+  image_uri    = "${aws_ecr_repository.secure_notes.repository_url}:0.1.1"
 
   role = aws_iam_role.lambda_execution.arn
 
-  timeout                        = 30
-  memory_size                    = 512
-  reserved_concurrent_executions = 10
+  timeout     = 30
+  memory_size = 512
 
   tracing_config {
     mode = "Active"
