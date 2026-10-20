@@ -92,7 +92,7 @@ jobs:
         run: docker build -t secure-notes-api:ci .
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: secure-notes-api:ci
           format: table
