@@ -89,7 +89,7 @@ resource "aws_iam_role" "github_actions" {
           }
 
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:man-like-duke/secure-notes-api:ref:refs/heads/master"
+            "token.actions.githubusercontent.com:sub" = "repo:man-like-duke@196172008/secure-notes-api@1424498346:ref:refs/heads/master"
           }
         }
       }
