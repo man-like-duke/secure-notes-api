@@ -78,4 +78,24 @@ jobs:
 
       - name: Run Checkov
         working-directory: terraform
-        run: checkov -d . 
+        run: checkov -d .
+
+  trivy:
+    name: Container Security - Trivy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t secure-notes-api:ci .
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: secure-notes-api:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
