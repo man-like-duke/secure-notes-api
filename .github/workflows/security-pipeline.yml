@@ -101,3 +101,70 @@ jobs:
           vuln-type: library
           severity: CRITICAL,HIGH
           version: v0.76.0
+
+  deploy:
+    name: Deploy to AWS
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs:
+      - gitleaks
+      - semgrep
+      - pip-audit
+      - checkov
+      - trivy
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      AWS_REGION: eu-west-1
+      ECR_REPOSITORY: secure-notes-api
+      LAMBDA_FUNCTION: secure-notes-api
+      AWS_ACCOUNT_ID: "610952688224"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::610952688224:role/secure-notes-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --provenance=false \
+            --platform linux/amd64 \
+            -t $ECR_REPOSITORY:${GITHUB_SHA} .
+
+      - name: Tag Docker image
+        run: |
+          docker tag \
+            $ECR_REPOSITORY:${GITHUB_SHA} \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${GITHUB_SHA}
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${GITHUB_SHA}
+
+      - name: Update Lambda
+        run: |
+          aws lambda update-function-code \
+            --region $AWS_REGION \
+            --function-name $LAMBDA_FUNCTION \
+            --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${GITHUB_SHA}
+
+      - name: Wait for Lambda update
+        run: |
+          aws lambda wait function-updated \
+            --region $AWS_REGION \
+            --function-name $LAMBDA_FUNCTION
