@@ -148,6 +148,11 @@ resource "aws_lambda_function" "secure_notes" {
 
   package_type = "Image"
   image_uri    = "${aws_ecr_repository.secure_notes.repository_url}:0.1.1"
+  lifecycle {
+    ignore_changes = [
+      image_uri
+    ]
+  }
 
   role = aws_iam_role.lambda_execution.arn
 
