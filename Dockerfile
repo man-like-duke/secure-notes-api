@@ -1,3 +1,4 @@
+# Refresh base image and remediate known package vulnerabilities
 FROM public.ecr.aws/lambda/python:3.14
 
 RUN dnf update -y && \
