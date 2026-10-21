@@ -286,7 +286,7 @@ ECR image tags use the Git commit SHA rather than mutable tags such as `latest`.
 Example:
 
 ```text
-secure-notes-api:c592673f21bb02b13991e516b5d03976e7108cbc
+secure-notes-api:<git-commit-sha>
 ```
 
 The ECR repository was configured with immutable image tags.
